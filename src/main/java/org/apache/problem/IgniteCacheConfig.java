@@ -126,14 +126,11 @@ public class IgniteCacheConfig {
         TcpCommunicationSpi spi = new TcpCommunicationSpi();
         spi.setLocalAddress(thisHost);
         // Ignite can't use same port for TCP discovery and communication - we will use port incrementally.
-        spi.setLocalPort(5702);
-        spi.setSharedMemoryPort(5703);
         return spi;
     }
 
     private DiscoverySpi getTcpDiscoverySpi(final String thisHost) {
         final TcpDiscoverySpi spi = new TcpDiscoverySpi()
-                .setLocalPort(5701)
                 .setLocalAddress(thisHost)
                 .setJoinTimeout(joinTimeoutInSeconds * 1000);
         final TcpDiscoveryVmIpFinder ipFinder = new TcpDiscoveryVmIpFinder();
