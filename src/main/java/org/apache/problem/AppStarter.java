@@ -18,7 +18,6 @@ public class AppStarter {
 
     public static void main(final String... args) throws IOException {
         System.setProperty("vertx.clustered", Boolean.toString(true));
-        System.setProperty("vertx.cluster-host", HostUtil.getNetworkInterfaces().get(0));
         new SpringApplication(AppStarter.class).run(args);
     }
 }

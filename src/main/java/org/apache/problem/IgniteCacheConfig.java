@@ -81,26 +81,21 @@ public class IgniteCacheConfig {
     @Bean
     public IgniteClusterManager clusterManager() throws SocketException {
 
-        hosts = System.getProperty("hosts");
-        if (StringUtils.isEmpty(hosts)) {
-            throw new IllegalArgumentException("Please define the hosts as argument format -Dhosts=IP_SEPARATED_BY_COMMA");
-        }
-        LOGGER.info("Hosts to be joined are {}", hosts);
+        final String thisNodeHost = determineClusterHosts();
 
-        final String thisHost = HostUtil.getNetworkInterfaces().get(0);
         final IgniteConfiguration configuration = new IgniteConfiguration()
                 .setSegmentationPolicy(segmentationPolicy)
                 .setSegmentationResolveAttempts(segmentationResolveAttempts)
                 .setDiscoverySpi(
-                        getTcpDiscoverySpi(thisHost))
+                        getTcpDiscoverySpi(thisNodeHost))
                 .setGridName(groupName)
                 .setClientMode(false)
                 .setGridLogger(new Slf4jLogger())
-                .setLocalHost(thisHost)
+                .setLocalHost(thisNodeHost)
                 .setIncludeEventTypes(CACHE_EVENTS)
                 .setFailureDetectionTimeout(failureDetectionTimeoutInSeconds * 1000)
                 .setCommunicationSpi(
-                        getTcpCommunicationSpi(thisHost))
+                        getTcpCommunicationSpi(thisNodeHost))
                 .setMetricsLogFrequency(metricsLogFrequencyInMinutes * 60 * 1000)
                 .setRebalanceThreadPoolSize(rebalanceThreadPoolSize)
                 .setCacheConfiguration(
@@ -122,6 +117,18 @@ public class IgniteCacheConfig {
             configuration.setConnectorConfiguration(null);
         }
         return new IgniteClusterManager(configuration);
+    }
+
+    private String determineClusterHosts() throws SocketException {
+        hosts = System.getProperty("hosts");
+        if (StringUtils.isEmpty(hosts)) {
+            throw new IllegalArgumentException("Please define the hosts as argument format -Dhosts=IP_SEPARATED_BY_COMMA");
+        }
+        LOGGER.info("Hosts to be joined are {}", hosts);
+
+        return HostUtil.getNetworkInterfaces().stream()
+                .filter(hostsProvidedFromCommandLine -> hosts.contains(hostsProvidedFromCommandLine))
+                .findFirst().orElseThrow(() -> new IllegalArgumentException("Provided hosts doesn't contain this Node IP."));
     }
 
     private TcpCommunicationSpi getTcpCommunicationSpi(final String thisHost) {
