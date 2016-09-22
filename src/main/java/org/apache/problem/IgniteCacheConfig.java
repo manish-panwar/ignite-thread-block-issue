@@ -11,19 +11,16 @@ import org.apache.ignite.spi.communication.tcp.TcpCommunicationSpi;
 import org.apache.ignite.spi.discovery.DiscoverySpi;
 import org.apache.ignite.spi.discovery.tcp.TcpDiscoverySpi;
 import org.apache.ignite.spi.discovery.tcp.ipfinder.vm.TcpDiscoveryVmIpFinder;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.util.StringUtils;
 
-import java.net.Inet6Address;
-import java.net.InetAddress;
-import java.net.NetworkInterface;
 import java.net.SocketException;
 import java.util.Arrays;
-import java.util.List;
-import java.util.stream.Collectors;
 
-import static java.util.Collections.list;
 import static org.apache.ignite.events.EventType.*;
 
 /**
@@ -32,7 +29,7 @@ import static org.apache.ignite.events.EventType.*;
 @Configuration
 public class IgniteCacheConfig {
 
-    // See http://apacheignite.gridgain.org/docs/performance-tips for performance tunning.
+    // See http://apacheignite.gridgain.org/docs/performance-tips for performance tuning.
     public static final int[] CACHE_EVENTS = new int[]{
             EVT_CACHE_STARTED,
             EVT_CACHE_REBALANCE_PART_DATA_LOST,
@@ -41,9 +38,8 @@ public class IgniteCacheConfig {
             EVT_NODE_LEFT,
             EVT_NODE_FAILED,
             EVT_NODE_SEGMENTED};
-
-    private final List<String> networkHosts = Arrays.asList("10.84.130.145", "10.84.131.239");
-
+    private static final Logger LOGGER = LoggerFactory.getLogger(IgniteCacheConfig.class);
+    private String hosts;
     @Value("${cache.map.backup-count:1}")
     private int mapBackupCount;
     @Value("${cache.map.read-backup-data:true}")
@@ -82,9 +78,15 @@ public class IgniteCacheConfig {
     @Value("${disable.rest.api:true}")
     private boolean disableRestAPI;
 
-
     @Bean
     public IgniteClusterManager clusterManager() throws SocketException {
+
+        hosts = System.getProperty("hosts");
+        if (StringUtils.isEmpty(hosts)) {
+            throw new IllegalArgumentException("Please define the hosts as argument format -Dhosts=IP_SEPARATED_BY_COMMA");
+        }
+        LOGGER.info("Hosts to be joined are {}", hosts);
+
         final String thisHost = HostUtil.getNetworkInterfaces().get(0);
         final IgniteConfiguration configuration = new IgniteConfiguration()
                 .setSegmentationPolicy(segmentationPolicy)
@@ -134,7 +136,7 @@ public class IgniteCacheConfig {
                 .setLocalAddress(thisHost)
                 .setJoinTimeout(joinTimeoutInSeconds * 1000);
         final TcpDiscoveryVmIpFinder ipFinder = new TcpDiscoveryVmIpFinder();
-        ipFinder.setAddresses(networkHosts);
+        ipFinder.setAddresses(Arrays.asList(hosts.split(",")));
         ipFinder.setShared(true);
         return spi.setIpFinder(ipFinder);
     }
