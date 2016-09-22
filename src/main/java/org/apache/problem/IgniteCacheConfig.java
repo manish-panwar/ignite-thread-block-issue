@@ -42,7 +42,7 @@ public class IgniteCacheConfig {
             EVT_NODE_FAILED,
             EVT_NODE_SEGMENTED};
 
-    private final List<String> networkHosts = Arrays.asList("10.84.130.145", "10.84.130.176");
+    private final List<String> networkHosts = Arrays.asList("10.84.130.145", "10.84.131.239");
 
     @Value("${cache.map.backup-count:1}")
     private int mapBackupCount;
