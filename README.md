@@ -6,7 +6,7 @@
         
         java -jar -Dhosts="1.1.1.1,2.2.2.2" ignite-thread-block-issue-1.0-SNAPSHOT-fat.jar
         
-    Here "1.1.1.1,2.2.2.2" are comma separated IP of hosts/nodes in cluster.
+    Here "1.1.1.1,2.2.2.2" are comma separated IP of hosts/nodes in cluster. Make sure you run this app on 2 nodes, and this list of hosts has both the IPs.
    
 - Now you must see logs on console telling when the thread is blocked.
 
