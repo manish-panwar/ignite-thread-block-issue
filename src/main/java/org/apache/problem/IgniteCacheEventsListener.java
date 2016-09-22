@@ -22,7 +22,6 @@ public class IgniteCacheEventsListener implements IgnitePredicate<Event> {
     public boolean apply(final Event event) {
         final ClusterNode node = event.node();
         if (event.type() == EVT_NODE_SEGMENTED || event.type() == EVT_NODE_FAILED) {
-            // TODO - Add handling for Segmented Node/cluster - this node/cluster should do Bulk Update.
             LOGGER.error("Event {} is received. Message {}, address {} ", event.name(), event.message(), node.addresses());
         }
         return true;

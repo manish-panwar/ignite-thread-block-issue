@@ -50,6 +50,7 @@ public class ProblemProducer {
             // Lets put something is cache, and ensure that we are able to read it.
             ignite.getOrCreateCache("someCache").put("someNumber", 1);
             require(ignite.getOrCreateCache("someCache").get("someNumber") != null, "Data not found in cache");
+            LOGGER.info("We are able to read the cache.");
 
             if (thereAreTwoNodesInCluster() && thisIsOldestNode() && threadHasNeverBlockedSoFar()) {
 
