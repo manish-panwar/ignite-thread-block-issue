@@ -16,23 +16,8 @@
         </encoder>
     </appender>
 
-    <appender name="APP_LOG" class="ch.qos.logback.core.rolling.RollingFileAppender">
-        <append>true</append>
-        <File>logs/app.log</File>
-        <encoder>
-            <pattern>%d{yyyy-MM-dd HH:mm:ss.SSS} %p \(%t\) [%c] - %m%n</pattern>
-        </encoder>
-        <rollingPolicy class="ch.qos.logback.core.rolling.FixedWindowRollingPolicy">
-            <maxIndex>50</maxIndex>
-            <FileNamePattern>logs/app.log.%i</FileNamePattern>
-        </rollingPolicy>
-        <triggeringPolicy class="ch.qos.logback.core.rolling.SizeBasedTriggeringPolicy">
-            <MaxFileSize>25MB</MaxFileSize>
-        </triggeringPolicy>
-    </appender>
-
     <appender name="APP_LOG_ASYNC" class="ch.qos.logback.classic.AsyncAppender">
-        <appender-ref ref="APP_LOG"/>
+        <appender-ref ref="stdout"/>
     </appender>
 
     <root level="info">
