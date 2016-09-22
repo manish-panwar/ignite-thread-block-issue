@@ -40,33 +40,35 @@ public class ProblemProducer {
         ignite.events().localListen(eventsListener, IgniteCacheConfig.CACHE_EVENTS);
 
         vertx.setPeriodic(SCHEDULE_EVERY_3_SECONDS, handler -> {
+            vertx.runOnContext(aVoid -> {
 
-            // Every 3 seconds we will check if there are more than 2 nodes in the cluster.
-            // As soon as we have 2 nodes(node A & B), oldest node(A) will stop the current thread
-            // execution for more than 5 seconds, which will cause oldest node(A) to be considered
-            // segmented.
-            // Once oldest node(A) is segmented, if we read from ignite cache, it's stuck forever.
+                // Every 3 seconds we will check if there are more than 2 nodes in the cluster.
+                // As soon as we have 2 nodes(node A & B), oldest node(A) will stop the current thread
+                // execution for more than 5 seconds, which will cause oldest node(A) to be considered
+                // segmented.
+                // Once oldest node(A) is segmented, if we read from ignite cache, it's stuck forever.
 
-            // Lets put something is cache, and ensure that we are able to read it.
-            ignite.getOrCreateCache("someCache").put("someNumber", 1);
-            require(ignite.getOrCreateCache("someCache").get("someNumber") != null, "Data not found in cache");
-            LOGGER.info("We are able to read the cache.");
+                // Lets put something is cache, and ensure that we are able to read it.
+                ignite.getOrCreateCache("someCache").put("someNumber", 1);
+                require(ignite.getOrCreateCache("someCache").get("someNumber") != null, "Data not found in cache");
+                LOGGER.info("We are able to read the cache.");
 
-            if (thereAreTwoNodesInCluster() && thisIsOldestNode() && threadHasNeverBlockedSoFar()) {
+                if (thereAreTwoNodesInCluster() && thisIsOldestNode() && threadHasNeverBlockedSoFar()) {
 
-                // Lets block the thread for more than 5 seconds on the oldest node.
-                try {
-                    // Make current thread sleep, which will cause segmentation.
-                    Thread.sleep(6000);
+                    // Lets block the thread for more than 5 seconds on the oldest node.
+                    try {
+                        // Make current thread sleep, which will cause segmentation.
+                        Thread.sleep(6000);
 
-                    // After thread is awaken, if we read the cache, it's causing the thread to be blocked forever.
-                    ignite.getOrCreateCache("someCache").get("someNumber");
+                        // After thread is awaken, if we read the cache, it's causing the thread to be blocked forever.
+                        ignite.getOrCreateCache("someCache").get("someNumber");
 
-                    // If thread is blocked during cache read then this line will never execute.
-                    threadBlocked = false;
-                } catch (InterruptedException e) {
+                        // If thread is blocked during cache read then this line will never execute.
+                        threadBlocked = false;
+                    } catch (InterruptedException e) {
+                    }
                 }
-            }
+            });
         });
 
         vertx.setPeriodic(SCHEDULE_EVERY_3_SECONDS, handler -> {
