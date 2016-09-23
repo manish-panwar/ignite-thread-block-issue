@@ -29,8 +29,6 @@ public class ProblemProducer {
     @Autowired
     private IgniteCacheEventsListener eventsListener;
     private Ignite ignite;
-    private boolean threadBlocked;
-    private boolean blockTheThread = true;
 
     @PostConstruct
     public void produceMyProblem() {
@@ -42,58 +40,13 @@ public class ProblemProducer {
         vertx.setPeriodic(SCHEDULE_EVERY_3_SECONDS, handler -> {
             vertx.runOnContext(aVoid -> {
 
-                // Every 3 seconds we will check if there are more than 2 nodes in the cluster.
-                // As soon as we have 2 nodes(node A & B), oldest node(A) will stop the current thread
-                // execution for more than 5 seconds, which will cause oldest node(A) to be considered
-                // segmented.
-                // Once oldest node(A) is segmented, if we read from ignite cache, it's stuck forever.
-
                 // Lets put something is cache, and ensure that we are able to read it.
                 ignite.getOrCreateCache("someCache").put("someNumber", 1);
                 require(ignite.getOrCreateCache("someCache").get("someNumber") != null, "Data not found in cache");
-                LOGGER.info("We are able to read the cache.");
-
-                if (thereAreTwoNodesInCluster() && thisIsOldestNode() && threadHasNeverBlockedSoFar()) {
-
-                    // Lets block the thread for more than 5 seconds on the oldest node.
-                    try {
-                        // Make current thread sleep, which will cause segmentation.
-                        Thread.sleep(6000);
-
-                        // After thread is awaken, if we read the cache, it's causing the thread to be blocked forever.
-                        ignite.getOrCreateCache("someCache").get("someNumber");
-
-                        // If thread is blocked during cache read then this line will never execute.
-                        threadBlocked = false;
-                    } catch (InterruptedException e) {
-                    }
-                }
+                LOGGER.info("Able to read cache successfully. This node host {}. Total nodes in cluster {}.",
+                        ignite.cluster().forOldest().node().addresses(),
+                        ignite.cluster().hostNames());
             });
         });
-
-        vertx.setPeriodic(SCHEDULE_EVERY_3_SECONDS, handler -> {
-            LOGGER.info("Thread on node {} is {}. Total nodes in cluster {}",
-                    ignite.cluster().forOldest().node().addresses(),
-                    threadBlocked ? " is blocked forever" : " is not blocked",
-                    ignite.cluster().hostNames());
-        });
-    }
-
-    private boolean threadHasNeverBlockedSoFar() {
-        if (blockTheThread) {
-            blockTheThread = false;
-            threadBlocked = true;
-            LOGGER.info("Going to block the thread for 5+ seconds");
-            return true;
-        }
-        return false;
-    }
-
-    private boolean thisIsOldestNode() {
-        return ignite.cluster().forOldest().node().isLocal();
-    }
-
-    private boolean thereAreTwoNodesInCluster() {
-        return ignite.cluster().hostNames().size() > 1;
     }
 }

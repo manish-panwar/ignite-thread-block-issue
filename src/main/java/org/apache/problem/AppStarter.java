@@ -18,6 +18,8 @@ public class AppStarter {
 
     public static void main(final String... args) throws IOException {
         System.setProperty("vertx.clustered", Boolean.toString(true));
+        System.setProperty("vertx.event-loop-pool-size", Integer.toString(1));
+        System.setProperty("vertx.worker-pool-size", Integer.toString(1));
         new SpringApplication(AppStarter.class).run(args);
     }
 }
