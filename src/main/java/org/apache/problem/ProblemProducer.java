@@ -72,7 +72,10 @@ public class ProblemProducer {
         });
 
         vertx.setPeriodic(SCHEDULE_EVERY_3_SECONDS, handler -> {
-            LOGGER.info("Thread on node {} is {}", ignite.cluster().forOldest().node().addresses(), threadBlocked ? " is blocked forever" : " is not blocked");
+            LOGGER.info("Thread on node {} is {}. Total nodes in cluster {}",
+                    ignite.cluster().forOldest().node().addresses(),
+                    threadBlocked ? " is blocked forever" : " is not blocked",
+                    ignite.cluster().hostNames());
         });
     }
 
